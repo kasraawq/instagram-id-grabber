@@ -1,0 +1,60 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.keys import Keys
+import time
+
+# ----------------------------
+# Get user input
+username_input = input("🧑‍💻 Instagram Username: ")
+password_input = input("🔐 Instagram Password: ")
+reel_url = input("🔗 Reel URL: ")
+
+# ----------------------------
+# Initialize WebDriver
+options = webdriver.ChromeOptions()
+options.add_argument("--headless")  # Remove this line if you want to see the browser
+driver = webdriver.Chrome(service=Service(), options=options)
+
+# ----------------------------
+# Log into Instagram
+driver.get("https://www.instagram.com/accounts/login/")
+time.sleep(5)
+
+# Enter username and password
+username_field = driver.find_element(By.NAME, "username")
+password_field = driver.find_element(By.NAME, "password")
+
+username_field.send_keys(username_input)
+password_field.send_keys(password_input)
+password_field.send_keys(Keys.RETURN)
+time.sleep(7)  # Wait for login
+
+# ----------------------------
+# Open the Reel
+driver.get(reel_url)
+time.sleep(5)
+
+# Scroll to load more comments
+for _ in range(6):
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    time.sleep(2)
+
+# ----------------------------
+# Collect commenters
+usernames = set()
+elements = driver.find_elements(By.CSS_SELECTOR, 'ul li div div div span a')
+
+for el in elements:
+    handle = el.text.strip()
+    if handle and handle.startswith("@"):
+        usernames.add(handle)
+
+# ----------------------------
+# Save to file
+with open("usernames.txt", "w", encoding="utf-8") as file:
+    for name in usernames:
+        file.write(name + "\n")
+
+print("✅ Done! Usernames have been saved to 'usernames.txt'.")
+driver.quit()
